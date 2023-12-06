@@ -12,7 +12,7 @@ func main() {
 		Amount: 100.00,
 	}
 
-	createBudget(budget)
+	saveBudget(budget)
 }
 
 type Budget struct {
@@ -20,7 +20,7 @@ type Budget struct {
 	Amount float64 `json:"amount"`
 }
 
-func createBudget(budget Budget) error {
+func saveBudget(budget Budget) error {
 	budgetFile, err := os.Create("budgets.json")
 	if err != nil {
 		fmt.Println("Error creating file: ", err)
