@@ -8,36 +8,27 @@ import (
 )
 
 func main() {
-	// budget := Budget{
-	// 	Name:   "test",
-	// 	Amount: 100.00,
-	// }
-
-	db, err := sql.Open("sqlite3", "test.db")
+	db, err := openDb()
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		fmt.Println("Error opening Budgets Database", err)
 		return
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS budgets (
-		id INTEGER PRIMARY KEY,
-		name TEXT,
-		amount FLOAT
-	)`)
+	err = createDbBudgetTable(db)
 	if err != nil {
 		fmt.Println("Error creating table:", err)
 		return
 	}
 
-	result, err := db.Exec("INSERT INTO budgets (name, amount) VALUES (?, ?)", "Test", 100.00)
+	insertedId, err := createDbBudget(db, Budget{
+		name: "test",
+		amount: 100.00,
+	})
 	if err != nil {
-		fmt.Println("Error inserting data:", err)
-		return
+		fmt.Println("Error creating Budget", err)
 	}
-
-	lastInsertID, _ := result.LastInsertId()
-	fmt.Println("Inserted ID:", lastInsertID)
+	fmt.Println("Inserted ID:", insertedId)
 
 	rows, err := db.Query("SELECT id, name, amount FROM budgets")
 	if err != nil {
@@ -56,31 +47,51 @@ func main() {
 		}
 		fmt.Printf("ID: %d, Name: %s, Age: %d\n", id, name, age)
 	}
-
-	//saveBudget(budget)
 }
 
 type Budget struct {
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
+	name   string
+	amount float64
 }
 
-// func saveBudget(budget Budget) error {
-// 	budgetFile, err := os.Open("budgets.json")
-// 	if err != nil {
-// 		fmt.Println("Error creating file: ", err)
-// 		return nil // TODO: change this
-// 	}
-// 	defer budgetFile.Close()
+func openDb() (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", "budgets.db")
+	if err != nil {
+		return db, err
+	}
+	return db, nil
+}
 
-// 	jsonEncoder := json.NewEncoder(budgetFile)
+func createDbBudgetTable(db *sql.DB) error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS budgets (
+		id INTEGER PRIMARY KEY,
+		name TEXT,
+		amount FLOAT
+	)`)
+	if err != nil {
+		return err
+	}
 
-// 	err = jsonEncoder.Encode(budget)
-// 	if err != nil {
-// 		fmt.Println("Error encoding JSON: ", err)
-// 		return nil // TODO: change this
-// 	}
+	return nil
+}
 
-// 	fmt.Println("Data written to JSON successfully")
-// 	return nil
-// }
+// stmt.Exec result is a type of int64
+func createDbBudget(db *sql.DB, budget Budget) (int64, error) {
+	stmt, err := db.Prepare("INSERT INTO budgets (name, amount) VALUES (?, ?)")
+	if err != nil {
+		fmt.Println("Error preparing statement:", err)
+		return 0, err
+	}
+	defer stmt.Close()
+
+	result, err := stmt.Exec(budget.name, budget.amount)
+	if err != nil {
+		fmt.Println("Error inserting data:", err)
+		return 0, err
+	}
+	lastInsertID, _ := result.LastInsertId()
+
+	return lastInsertID, nil
+}
+
+// TODO: Implement Reads (multiple) Update and Delete
