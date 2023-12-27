@@ -2,16 +2,17 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
 	"os"
 	"strings"
 )
 
-func startRepl() {
+func startRepl(db *sql.DB) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Print(" > ")
+		fmt.Print("> ")
 
 		scanner.Scan()
 		text := scanner.Text()
@@ -29,7 +30,7 @@ func startRepl() {
 			fmt.Println("Command not found")
 			continue
 		}
-		err := command.callback()
+		err := command.callback(db)
 		if err!= nil {
 			fmt.Println("Error executing command:", err)
 			continue
@@ -40,56 +41,52 @@ func startRepl() {
 type command struct {
 	name string
 	description string
-	callback func() error
+	callback func(*sql.DB) error
 }
 
+// TODO: Make functions for commands
 func getCommands() map[string]command {
 	return map[string]command {	
 		"help": {
 			name: "help",
 			description: "List commands",
-			callback: func() error {
+			callback: func(*sql.DB) error {
 				return nil
 			},
 		},
 		"create": {
 			name: "create",
 			description: "Create a budget",
-			callback: func() error {
+			callback: func(*sql.DB) error {
 				return nil
 			},
 		},
 		"read": {
 			name: "read",
-			description: "Read a budget",
-			callback: func() error {
-				return nil
-			},
+			description: "Get all budgets",
+			callback: readAllDbBudgets,
 		},
 		"update": {
 			name: "update",
 			description: "Update a budget",
-			callback: func() error {
+			callback: func(*sql.DB) error {
 				return nil
 			},
 		},
 		"delete": {
 			name: "delete",
 			description: "Delete a budget",
-			callback: func() error {
+			callback: func(*sql.DB) error {
 				return nil
 			},
 		},
 		"quit": {
 			name: "quit",
 			description: "Quit the program",
-			callback: func() error {
+			callback: func(*sql.DB) error {
 				os.Exit(0)
 				return nil
 			},
 		},
 	}
 }
-
-// TODO: Make a list of commands
-// TODO: Implement REPL and Commands to go with ^

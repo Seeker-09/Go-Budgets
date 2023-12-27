@@ -14,6 +14,10 @@ func main() {
 	}
 	defer db.Close()
 
+	fmt.Println("Type help for a list of commands")
+
+	startRepl(db)
+
 	err = createDbBudgetTable(db)
 	if err != nil {
 		fmt.Println("Error creating table:", err)
@@ -28,26 +32,4 @@ func main() {
 		fmt.Println("Error creating Budget", err)
 	}
 	fmt.Println("Inserted ID:", insertedId)
-
-	rows, err := db.Query("SELECT id, name, amount FROM budgets")
-	if err != nil {
-		fmt.Println("Error querying data:", err)
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var id, age int
-		var name string
-		err := rows.Scan(&id, &name, &age)
-		if err != nil {
-			fmt.Println("Error scanning rows:", err)
-			return
-		}
-		fmt.Printf("ID: %d, Name: %s, Age: %d\n", id, name, age)
-	}
 }
-
-
-
-
